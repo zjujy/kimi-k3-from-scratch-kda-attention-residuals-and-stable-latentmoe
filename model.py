@@ -45,8 +45,18 @@ def kda_qkv(x, params):
 
     return q, k, v
 
-# Step 3 - kda_gates (not yet solved)
-# TODO: implement
+# Step 3 - kda_gates
+def kda_gates(x, params):
+    """Return (beta, z): write strength sigmoid(x@wb+bb), decay logits x@Wd1@Wd2+ba.
+
+    params: wb (d,), bb scalar, Wd1 (d,r), Wd2 (r,dk), ba (dk,).
+    beta: (T,) in (0,1).  z: (T, dk), unbounded.
+    """
+    # TODO
+    beta = x @ params["wb"] + params["bb"]
+    beta = 1 / (1 + np.exp(-beta))
+    z = x @ params["Wd1"] @ params["Wd2"] + params["ba"]
+    return beta, z
 
 # Step 4 - lower_bounded_decay (not yet solved)
 # TODO: implement
