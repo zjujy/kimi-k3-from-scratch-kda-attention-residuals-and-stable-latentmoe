@@ -72,8 +72,18 @@ def lower_bounded_decay(z, A, g_min=-5.0):
     # alpha = np.minimum(alpha, np.nextafter(1.0, 0,0))
     return np.exp(g_min * 1 / (1 + np.exp(-np.exp(A) * z)))
 
-# Step 5 - kda_state_update (not yet solved)
-# TODO: implement
+# Step 5 - kda_state_update
+def kda_state_update(S, k, v, alpha, beta):
+    """One KDA step: (I - beta k k^T) @ diag(alpha) @ S + beta * outer(k, v).
+
+    S: (dk, dv).  k: (dk,).  v: (dv,).  alpha: (dk,).  beta: scalar.
+    """
+    # TODO: decay, then delta-rule erase, then write
+    S_decay = alpha[:, None] * S
+    old_v = k @ S_decay
+    delta = v - old_v
+    S_new = S_decay + beta * np.outer(k, delta)
+    return S_new
 
 # Step 6 - kda_recurrence (not yet solved)
 # TODO: implement
