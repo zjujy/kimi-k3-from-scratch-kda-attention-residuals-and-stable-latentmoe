@@ -24,8 +24,26 @@ def short_conv(x, w):
                 y[t] += w[j] * x[pos]
     return y
 
-# Step 2 - kda_qkv (not yet solved)
-# TODO: implement
+# Step 2 - kda_qkv
+def kda_qkv(x, params):
+    """KDA projections: q,k = L2Norm(Swish(ShortConv(W x))), v = Swish(ShortConv(Wv x)).
+
+    params: dict with Wq (d,dk), Wk (d,dk), Wv (d,dv), cq (K,dk), ck (K,dk), cv (K,dv).
+    Returns (q, k, v).  L2Norm divides each row by sqrt(sum(row**2) + 1e-6).
+    """
+    # TODO: project -> short_conv -> swish, then L2-normalize q and k rows
+    q = short_conv(x @ params["Wq"], params["cq"])
+    k = short_conv(x @ params["Wk"], params["ck"])
+    v = short_conv(x @ params["Wv"], params["cv"])
+
+    q = q / (1 + np.exp(-q))
+    k = k / (1 + np.exp(-k))
+    v = v / (1 + np.exp(-v))
+
+    q = q / np.sqrt(np.sum(q**2, axis=-1, keepdims=True) + 1e-6)
+    k = k / np.sqrt(np.sum(k**2, axis=-1, keepdims=True) + 1e-6)
+
+    return q, k, v
 
 # Step 3 - kda_gates (not yet solved)
 # TODO: implement
