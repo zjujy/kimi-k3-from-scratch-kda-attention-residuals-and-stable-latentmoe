@@ -65,8 +65,8 @@ def lower_bounded_decay(z, A, g_min=-5.0):
     z: (T, dk) decay logits.  A: scalar per-head log-scale.
     """
     # TODO
-    scaled = np.exp(A) * z
-    s = np.exp(-np.logaddexp(0.0, -scaled))
+    # scaled = np.exp(A) * z
+    # s = np.exp(-np.logaddexp(0.0, -scaled))
     # g = g_min * s
     # alpha = np.exp(g)
     # alpha = np.minimum(alpha, np.nextafter(1.0, 0,0))
