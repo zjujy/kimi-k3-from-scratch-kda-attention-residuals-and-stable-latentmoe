@@ -134,8 +134,52 @@ def chunk_pseudo_values(k, v, alpha, beta, S0):
     U = np.linalg.solve(A, B)
     return U
 
-# Step 9 - kda_chunkwise (not yet solved)
-# TODO: implement
+# Step 9 - kda_chunkwise
+def kda_chunkwise(q, k, v, alpha, beta, chunk_size, S0=None):
+    """Chunkwise-parallel KDA (Eq. 4): O_c = Qhat @ S + tril(Qhat Kcheck^T) @ U.
+
+    State hand-off: S <- Gamma[-1][:,None] * (S + Kcheck^T U). Must equal
+    kda_recurrence for every chunk size. Returns (O, S_final).
+    """
+    # TODO
+    T, dk = q.shape
+    dv = v.shape[1]
+    if S0 is None:
+        S = np.zeros((dk, dv))
+    else:
+        S = S0.copy()
+    
+    O = np.zeros((T, dv))
+
+    for start in range(0, T, chunk_size):
+        end = min(start + chunk_size, T)
+        q_c = q[start: end]
+        k_c = k[start: end]
+        v_c = v[start: end]
+        alpha_c = alpha[start: end]
+        beta_c = beta[start: end]
+
+        Gamma = cumulative_decay(alpha_c)
+        Qhat = q_c * Gamma
+        Kcheck = k_c / Gamma
+
+        U = chunk_pseudo_values(
+            k_c, v_c, alpha_c, beta_c, S
+        )
+
+        inter_chunk = Qhat @ S
+
+        intra_chunk = (
+            np.tril(Qhat @ Kcheck.T) @ U
+        )
+
+        O[start: end] = inter_chunk + intra_chunk
+        
+        S = Gamma[-1][:, None] * (
+            S + Kcheck.T @ U
+        )
+    
+    return O, S
 
 # Step 10 - kda_output_gate (not yet solved)
 # TODO: implement
