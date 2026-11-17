@@ -264,8 +264,12 @@ def mla_output_gate(o, x, Wg, Wo):
     y = gated_o @ Wo
     return y
 
-# Step 14 - hybrid_schedule (not yet solved)
-# TODO: implement
+# Step 14 - hybrid_schedule
+def hybrid_schedule(n_repeats):
+    """['KDA','KDA','KDA','MLA'] repeated n_repeats times, plus a final 'MLA'."""
+    # TODO
+    block = ['KDA', 'KDA', 'KDA', 'MLA']
+    return block * n_repeats + ['MLA']
 
 # Step 15 - attnres_weights (not yet solved)
 # TODO: implement
