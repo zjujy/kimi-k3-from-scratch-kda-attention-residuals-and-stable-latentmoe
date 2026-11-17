@@ -291,8 +291,18 @@ def attnres_weights(pseudo_q, sources):
     exp_logits = np.exp(logits)
     return exp_logits / exp_logits.sum(axis=0, keepdims=True)
 
-# Step 16 - attnres_full (not yet solved)
-# TODO: implement
+# Step 16 - attnres_full
+def attnres_full(pseudo_q, sources):
+    """h[t] = sum_i attnres_weights(...)[i, t] * sources[i][t] (raw values).
+
+    Returns (T, d).
+    """
+    # TODO
+    weights = attnres_weights(pseudo_q, sources)
+    V = np.stack(sources, axis=0)
+    weighted_V = weights[:, :, None] * V
+    h = np.sum(weighted_V, axis=0)
+    return h
 
 # Step 17 - block_partial_sums (not yet solved)
 # TODO: implement
