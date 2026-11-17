@@ -211,8 +211,46 @@ def mla_compress_reconstruct(x, Wc, Wk_up, Wv_up, n_heads):
     
     return c, K, V
 
-# Step 12 - nope_attention (not yet solved)
-# TODO: implement
+# Step 12 - nope_attention
+def nope_attention(x, Wq, Wc, Wk_up, Wv_up, n_heads):
+    """Causal multi-head attention over MLA-reconstructed K,V - no positions.
+
+    Q = (x @ Wq).reshape(T, H, dh); per head softmax(QK^T/sqrt(dh)) V with a
+    causal mask; concatenate heads -> (T, H*dh).
+    """
+    # TODO
+    T, d = x.shape
+    dh = Wq.shape[1] // n_heads
+
+    Q = (x @ Wq).reshape(T, n_heads, dh)
+    c, K, V = mla_compress_reconstruct(
+        x, Wc, Wk_up, Wv_up, n_heads
+    )
+    O = np.zeros((T, n_heads, dh))
+
+    for h in range(n_heads):
+        Qh = Q[:, h, :]
+        Kh = K[:, h, :]
+        Vh = V[:, h, :]
+
+        scores = Qh @ Kh.T / np.sqrt(dh)
+
+        mask = np.triu(
+            np.ones((T, T), dtype=bool), k=1
+        )
+        scores[mask] = -1e9
+
+        scores = scores - np.max(
+            scores, axis=-1, keepdims=True
+        )
+        exp_scores = np.exp(scores)
+        attn = exp_scores / np.sum(
+            exp_scores, axis=-1, keepdims=True
+        )
+
+        O[:, h, :] = attn @ Vh
+    
+    return O.reshape(T, n_heads * dh)
 
 # Step 13 - mla_output_gate (not yet solved)
 # TODO: implement
