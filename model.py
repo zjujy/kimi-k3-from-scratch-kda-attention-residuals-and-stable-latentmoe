@@ -304,8 +304,22 @@ def attnres_full(pseudo_q, sources):
     h = np.sum(weighted_V, axis=0)
     return h
 
-# Step 17 - block_partial_sums (not yet solved)
-# TODO: implement
+# Step 17 - block_partial_sums
+def block_partial_sums(layer_outputs):
+    """Running sums of a block's layer outputs; entry i sums outputs 0..i.
+
+    Returns a list of independent (T, d) arrays; last entry = block sum b_n.
+    """
+    # TODO
+    partial_sums = []
+    running_sum = None
+    for output in layer_outputs:
+        if running_sum is None:
+            running_sum = output.copy()
+        else:
+            running_sum += output
+        partial_sums.append(running_sum.copy())
+    return partial_sums
 
 # Step 18 - attnres_block (not yet solved)
 # TODO: implement
