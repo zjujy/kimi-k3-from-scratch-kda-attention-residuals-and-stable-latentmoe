@@ -423,8 +423,19 @@ def topk_cutoffs(s, bias, k):
     )[:, 0]
     return routes, cutoffs
 
-# Step 24 - quantile_balance_update (not yet solved)
-# TODO: implement
+# Step 24 - quantile_balance_update
+def quantile_balance_update(s, bias, k):
+    """QB (Eq. 14): bhat_j = -(the (q+1)-th largest of s[:, j] - cutoffs),
+    q = m*k // n; return bhat - mean(bhat).
+    """
+    # TODO
+    m, n = s.shape
+    q = m * k // n
+    _, cutoffs = topk_cutoffs(s, bias, k)
+    margins = s - cutoffs[:, None]
+    sorted_margins = np.sort(margins, axis=0)[::-1]
+    bhat = -sorted_margins[q]
+    return bhat - np.mean(bhat)
 
 # Step 25 - histogram_quantile (not yet solved)
 # TODO: implement
