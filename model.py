@@ -384,8 +384,27 @@ def routed_experts(z, idx, p, experts):
             u[t] += p[t, j] * out[0]
     return u
 
-# Step 22 - stable_latent_moe (not yet solved)
-# TODO: implement
+# Step 22 - stable_latent_moe
+def stable_latent_moe(x, params):
+    """y = sum_shared SiTU(x) + RMSNorm(routed_aggregate) @ Wup (Eq. 11).
+
+    Route on full-width x; compute in latent width; RMSNorm(u) before Wup.
+    """
+    # TODO
+    z = x @ params['Wdown']
+    s, idx, p = route_topk(
+        x, params['Wr'], params['bias'], params['k']
+    )
+    u = routed_experts(z, idx, p, params['experts'])
+    u_norm = u / np.sqrt(
+        np.mean(u**2, axis=-1, keepdims=True) + 1e-6
+    )
+    routed_out = u_norm @ params['Wup']
+    shared_out = np.zeros_like(x, dtype=float)
+
+    for Wg, Wu in params['shared']:
+        shared_out += situ_glu(x, Wg, Wu)
+    return shared_out + routed_out
 
 # Step 23 - topk_cutoffs (not yet solved)
 # TODO: implement
