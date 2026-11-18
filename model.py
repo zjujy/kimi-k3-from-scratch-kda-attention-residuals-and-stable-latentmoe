@@ -437,8 +437,24 @@ def quantile_balance_update(s, bias, k):
     bhat = -sorted_margins[q]
     return bhat - np.mean(bhat)
 
-# Step 25 - histogram_quantile (not yet solved)
-# TODO: implement
+# Step 25 - histogram_quantile
+def histogram_quantile(x, n_bins, lo, hi, q_frac):
+    """Quantile from pooled bin counts; error <= (hi - lo) / n_bins.
+
+    Return the right edge of the first bin whose cumulative count reaches
+    q_frac * len(x).
+    """
+    # TODO
+    counts, edges = np.histogram(
+        x, bins=n_bins, range=(lo, hi)
+    )
+
+    cumulative = np.cumsum(counts)
+
+    target = q_frac * len(x)
+    idx = np.searchsorted(cumulative, target)
+    idx = np.clip(idx, 0, n_bins - 1)
+    return edges[idx + 1]
 
 # Step 26 - newton_schulz (not yet solved)
 # TODO: implement
