@@ -477,8 +477,20 @@ def newton_schulz(G, n_iters=5):
     
     return X.T if transposed else X
 
-# Step 27 - per_head_muon (not yet solved)
-# TODO: implement
+# Step 27 - per_head_muon
+def per_head_muon(M, n_heads, n_iters=5):
+    """Split M (d, H*dh) into H column blocks, newton_schulz each, re-concatenate."""
+    # TODO
+    d, total_dim = M.shape
+    dh = total_dim // n_heads
+    blocks = []
+
+    for h in range(n_heads):
+        G = M[:, h * dh:(h + 1) * dh]
+        G_ortho = newton_schulz(G, n_iters)
+        blocks.append(G_ortho)
+    
+    return np.concatenate(blocks, axis=1)
 
 # Step 28 - mini_k3_forward (not yet solved)
 # TODO: implement
