@@ -406,8 +406,22 @@ def stable_latent_moe(x, params):
         shared_out += situ_glu(x, Wg, Wu)
     return shared_out + routed_out
 
-# Step 23 - topk_cutoffs (not yet solved)
-# TODO: implement
+# Step 23 - topk_cutoffs
+def topk_cutoffs(s, bias, k):
+    """Top-(k+1) on s + bias: first k -> routes (m, k); (k+1)-th biased score
+    -> cutoffs (m,). Returns (routes, cutoffs).
+    """
+    # TODO
+    biased_scores = s + bias
+    order = np.argsort(
+        -biased_scores, axis=1, kind='stable'
+    )
+    routes = order[:, :k]
+    cutoff_idx = order[:, k]
+    cutoffs = np.take_along_axis(
+        biased_scores, cutoff_idx[:, None], axis=1
+    )[:, 0]
+    return routes, cutoffs
 
 # Step 24 - quantile_balance_update (not yet solved)
 # TODO: implement
