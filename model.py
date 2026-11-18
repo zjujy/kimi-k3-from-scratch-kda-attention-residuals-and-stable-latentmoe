@@ -333,8 +333,19 @@ def attnres_block(pseudo_q, block_reps, partial):
         sources.append(partial)
     return attnres_full(pseudo_q, sources)
 
-# Step 19 - situ_glu (not yet solved)
-# TODO: implement
+# Step 19 - situ_glu
+def situ_glu(x, Wg, Wu, beta1=4.0, beta2=25.0):
+    """(softcap(x@Wg, b1) * sigmoid(x@Wg)) * softcap(x@Wu, b2), softcap = b*tanh(u/b).
+
+    Use sigmoid(g) = 0.5*(1 + tanh(0.5*g)) to stay overflow-safe. |out| <= b1*b2.
+    """
+    # TODO
+    g = x @ Wg
+    u = x @ Wu
+    g_cap = beta1 * np.tanh(g / beta1)
+    u_cap = beta2 * np.tanh(u / beta2)
+    gate = 0.5 * (1.0 + np.tanh(0.5 * g))
+    return g_cap * gate * u_cap
 
 # Step 20 - route_topk (not yet solved)
 # TODO: implement
