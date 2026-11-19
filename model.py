@@ -492,6 +492,108 @@ def per_head_muon(M, n_heads, n_iters=5):
     
     return np.concatenate(blocks, axis=1)
 
-# Step 28 - mini_k3_forward (not yet solved)
-# TODO: implement
+# Step 28 - mini_k3_forward
+import numpy as np
+
+def mini_k3_forward(tokens, seed):
+    rng = np.random.default_rng(seed)
+
+    def W(*shape):
+        return rng.normal(0.0, 0.3, size=shape)
+
+    vocab, d = 17, 16
+    dk = dv = 8
+    H, r = 2, 8
+    n_experts, top_k = 8, 2
+    conv_k, decay_rank = 3, 4  # 修正变量名
+
+    emb = W(vocab, d)
+    layers = []
+
+    for layer_type in hybrid_schedule(1):
+        wq_res = W(d)
+
+        if layer_type == "KDA":
+            attn = {
+                "Wq": W(d, dk),
+                "Wk": W(d, dk),
+                "Wv": W(d, dv),
+                "cq": W(conv_k, dk),
+                "ck": W(conv_k, dk),
+                "cv": W(conv_k, dv),
+                "wb": W(d),
+                "bb": 0.0,
+                "Wd1": W(d, decay_rank),
+                "Wd2": W(decay_rank, dk),
+                "ba": W(dk),
+                "Wg": W(d, dv),
+                "Wo": W(dv, d),
+            }
+        else:
+            attn = {
+                "Wq": W(d, H * dk),
+                "Wc": W(d, r),
+                "Wk_up": W(r, H * dk),
+                "Wv_up": W(r, H * dk),
+                "Wg": W(d, H * dk),
+                "Wo": W(H * dk, d),
+            }
+
+        moe = {
+            "Wdown": W(d, r),
+            "Wup": W(r, d),
+            "Wr": W(d, n_experts),
+            "bias": np.zeros(n_experts),
+            "k": top_k,
+            "experts": [
+                (W(r, r), W(r, r))
+                for _ in range(n_experts)
+            ],
+            "shared": [
+                (W(d, d), W(d, d))
+                for _ in range(2)
+            ],
+        }
+
+        layers.append((layer_type, wq_res, attn, moe))
+
+    w_final = W(d)
+
+    tokens = np.asarray(tokens, dtype=int)
+    sources = [emb[tokens]]
+
+    for layer_type, wq_res, attn, moe in layers:
+        h = attnres_full(wq_res, sources)
+
+        if layer_type == "KDA":
+            q, k, v = kda_qkv(h, attn)
+            beta, z = kda_gates(h, attn)
+            alpha = lower_bounded_decay(z, A=0.0)
+
+            o, _ = kda_recurrence(
+                q, k, v, alpha, beta
+            )
+
+            a = kda_output_gate(
+                o, h, attn["Wg"], attn["Wo"]
+            )
+        else:
+            o = nope_attention(
+                h,
+                attn["Wq"],
+                attn["Wc"],
+                attn["Wk_up"],
+                attn["Wv_up"],
+                n_heads=H
+            )
+
+            a = mla_output_gate(
+                o, h, attn["Wg"], attn["Wo"]
+            )
+
+        f = a + stable_latent_moe(a, moe)
+        sources.append(f)
+
+    h_out = attnres_full(w_final, sources)
+    return h_out @ emb.T
 
